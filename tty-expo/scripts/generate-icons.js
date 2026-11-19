@@ -1,4 +1,4 @@
-// Generates the T3rm!n@l app icons: a neon ">_" prompt glyph.
+// Generates the T3rm!n@l app icons: a charcoal rounded card with a white ">_" prompt.
 // Run with: node scripts/generate-icons.js
 const fs = require('fs');
 const path = require('path');
@@ -51,72 +51,97 @@ function distanceToSegment(x, y, ax, ay, bx, by) {
   const dy = by - ay;
   const lengthSquared = dx * dx + dy * dy;
   const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / lengthSquared));
-  const px = ax + t * dx;
-  const py = ay + t * dy;
-  return Math.hypot(x - px, y - py);
+  return Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
 }
 
-// Glyph in a 100x100 coordinate space: ">" chevron plus "_" underscore.
+/** Signed distance to a rounded rectangle centred on the origin. */
+function distanceToRoundedBox(x, y, halfWidth, halfHeight, radius) {
+  const dx = Math.abs(x) - halfWidth + radius;
+  const dy = Math.abs(y) - halfHeight + radius;
+  return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0) - radius;
+}
+
+// Glyph in a 100x100 coordinate space: thick ">" chevron plus "_" underscore.
 const STROKES = [
-  { ax: 20, ay: 22, bx: 58, by: 50, radius: 5.6 },
-  { ax: 58, ay: 50, bx: 20, by: 78, radius: 5.6 },
-  { ax: 66, ay: 80, bx: 90, by: 80, radius: 5.2 },
+  { ax: 27, ay: 24, bx: 53, by: 50, radius: 6.3 },
+  { ax: 53, ay: 50, bx: 27, by: 76, radius: 6.3 },
+  { ax: 59, ay: 77, bx: 85, by: 77, radius: 6.3 },
 ];
 
 const SUPERSAMPLE = 4;
+const CARD = [47, 47, 47];
+const WHITE = [255, 255, 255];
 
 /**
- * Draws the glyph centred in `size`, occupying `scale` of the canvas.
- * Returns straight RGBA bytes at `size` resolution.
+ * Draws the logo. `card` fills a rounded square centred in the canvas; the glyph is
+ * drawn on top. Everything outside the card is transparent unless `background` is set.
  */
-function renderGlyph(size, { glyphScale, background, color, transparent }) {
+function renderLogo(size, { glyphScale, card = null, glyphColor = WHITE, background = null }) {
   const big = size * SUPERSAMPLE;
+  // Premultiplied float accumulators so edges blend without dark halos.
   const pixels = new Float32Array(big * big * 4);
 
   const box = big * glyphScale;
   const offset = (big - box) / 2;
   const unit = box / 100;
   const toPx = (value) => offset + value * unit;
-
   const strokes = STROKES.map((stroke) => ({
-    ...stroke,
     ax: toPx(stroke.ax),
     ay: toPx(stroke.ay),
     bx: toPx(stroke.bx),
     by: toPx(stroke.by),
     r: stroke.radius * unit,
   }));
-  const glow = 5 * unit;
 
-  const [cr, cg, cb] = color;
-  const [br, bg, bb] = background;
+  const cardShape = card
+    ? {
+        half: big * card.half,
+        radius: big * (card.radius ?? 0),
+        color: card.color ?? CARD,
+      }
+    : null;
 
   for (let y = 0; y < big; y += 1) {
     for (let x = 0; x < big; x += 1) {
       const index = (y * big + x) * 4;
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      let a = 0;
+
+      if (background) {
+        r = background[0];
+        g = background[1];
+        b = background[2];
+        a = 1;
+      }
+
+      if (cardShape) {
+        const d = distanceToRoundedBox(x + 0.5 - big / 2, y + 0.5 - big / 2, cardShape.half, cardShape.half, cardShape.radius);
+        if (d <= 0) {
+          r = cardShape.color[0];
+          g = cardShape.color[1];
+          b = cardShape.color[2];
+          a = 1;
+        }
+      }
+
       let distance = Infinity;
       for (const stroke of strokes) {
         const d = distanceToSegment(x + 0.5, y + 0.5, stroke.ax, stroke.ay, stroke.bx, stroke.by) - stroke.r;
         if (d < distance) distance = d;
       }
-      let alpha = 0;
       if (distance <= 0) {
-        alpha = 1;
-      } else if (distance < glow) {
-        alpha = 0.35 * (1 - distance / glow);
+        r = glyphColor[0];
+        g = glyphColor[1];
+        b = glyphColor[2];
+        a = 1;
       }
 
-      if (transparent) {
-        pixels[index] = cr;
-        pixels[index + 1] = cg;
-        pixels[index + 2] = cb;
-        pixels[index + 3] = alpha * 255;
-      } else {
-        pixels[index] = br + (cr - br) * alpha;
-        pixels[index + 1] = bg + (cg - bg) * alpha;
-        pixels[index + 2] = bb + (cb - bb) * alpha;
-        pixels[index + 3] = 255;
-      }
+      pixels[index] = r * a;
+      pixels[index + 1] = g * a;
+      pixels[index + 2] = b * a;
+      pixels[index + 3] = a;
     }
   }
 
@@ -138,31 +163,38 @@ function renderGlyph(size, { glyphScale, background, color, transparent }) {
         }
       }
       const target = (y * size + x) * 4;
-      out[target] = Math.round(r / samples);
-      out[target + 1] = Math.round(g / samples);
-      out[target + 2] = Math.round(b / samples);
-      out[target + 3] = Math.round(a / samples);
+      const alpha = a / samples;
+      if (alpha > 0) {
+        out[target] = Math.round(Math.min(255, r / a));
+        out[target + 1] = Math.round(Math.min(255, g / a));
+        out[target + 2] = Math.round(Math.min(255, b / a));
+      }
+      out[target + 3] = Math.round(alpha * 255);
     }
   }
   return out;
 }
 
-const DARK = [8, 11, 15];
-const GREEN = [51, 255, 136];
-const WHITE = [255, 255, 255];
+const FULL_CARD = { half: 0.5, radius: 0 };
 
 const assets = [
-  { file: 'icon.png', size: 1024, glyphScale: 0.62, background: DARK, color: GREEN, transparent: false },
-  { file: 'splash-icon.png', size: 1024, glyphScale: 0.4, background: DARK, color: GREEN, transparent: true },
-  { file: 'favicon.png', size: 96, glyphScale: 0.68, background: DARK, color: GREEN, transparent: false },
-  { file: 'watermark.png', size: 512, glyphScale: 0.78, background: DARK, color: GREEN, transparent: true },
-  { file: 'android-icon-foreground.png', size: 512, glyphScale: 0.5, background: DARK, color: GREEN, transparent: true },
-  { file: 'android-icon-background.png', size: 512, glyphScale: 0.5, background: DARK, color: GREEN, transparent: false },
-  { file: 'android-icon-monochrome.png', size: 432, glyphScale: 0.5, background: DARK, color: WHITE, transparent: true },
+  // Square launcher icon: full-bleed card so the launcher mask does the rounding.
+  { file: 'icon.png', size: 1024, glyphScale: 0.62, card: FULL_CARD },
+  // Splash mark keeps the rounded card silhouette on a transparent field.
+  { file: 'splash-icon.png', size: 1024, glyphScale: 0.5, card: { half: 0.42, radius: 0.16 } },
+  { file: 'favicon.png', size: 96, glyphScale: 0.66, card: FULL_CARD },
+  // Standalone logo for docs/store listings: white field, inset rounded card.
+  { file: 'logo.png', size: 512, glyphScale: 0.42, card: { half: 0.34, radius: 0.13 }, background: [255, 255, 255] },
+  // Watermark for the terminal background: glyph only, tinted at runtime.
+  { file: 'watermark.png', size: 512, glyphScale: 0.78 },
+  // Adaptive icon layers: glyph sits inside the 66% safe zone, card colour is the background.
+  { file: 'android-icon-foreground.png', size: 512, glyphScale: 0.44 },
+  { file: 'android-icon-background.png', size: 512, glyphScale: 0.44, card: FULL_CARD },
+  { file: 'android-icon-monochrome.png', size: 432, glyphScale: 0.44 },
 ];
 
 for (const asset of assets) {
-  const rgba = renderGlyph(asset.size, asset);
+  const rgba = renderLogo(asset.size, asset);
   const png = encodePng(asset.size, asset.size, rgba);
   fs.writeFileSync(path.join(OUT, asset.file), png);
   console.log(`wrote ${asset.file} ${asset.size}x${asset.size} (${png.length} bytes)`);

@@ -21,7 +21,7 @@
     "android": {
       "package": "com.tty.launcher.expo",
       "adaptiveIcon": {
-        "backgroundColor": "#080B0F",
+        "backgroundColor": "#2F2F2F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
