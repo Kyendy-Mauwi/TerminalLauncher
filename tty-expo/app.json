@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "T3rm!n@l",
+    "slug": "tty-expo",
+    "description": "Your phone. Your rules.",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "scheme": "tty",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#080B0F",
+    "splash": {
+      "backgroundColor": "#080B0F",
+      "resizeMode": "contain",
+      "image": "./assets/splash-icon.png"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tty.launcher.expo"
+    },
+    "android": {
+      "package": "com.tty.launcher.expo",
+      "adaptiveIcon": {
+        "backgroundColor": "#080B0F",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

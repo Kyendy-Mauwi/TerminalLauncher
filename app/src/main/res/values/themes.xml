@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TTY" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF080B0F</item>
+        <item name="android:statusBarColor">#FF080B0F</item>
+        <item name="android:navigationBarColor">#FF080B0F</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

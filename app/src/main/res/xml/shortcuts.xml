@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_terminal"
+        android:shortcutId="terminal"
+        android:shortcutLongLabel="@string/shortcut_terminal_long"
+        android:shortcutShortLabel="@string/shortcut_terminal_short">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetClass="com.tty.launcher.MainActivity"
+            android:targetPackage="com.tty.launcher" />
+    </shortcut>
+</shortcuts>

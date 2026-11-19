@@ -1,0 +1,29 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/.tools/
+/app/build/
+*.apk
+*.aab
+*.keystore
+!debug.keystore
+
+# Local tooling
+.freebuff/
+.kotlin/
+
+# Expo dependencies and generated output
+tty-expo/node_modules/
+tty-expo/.expo/
+tty-expo/dist/
+
+# Gradle/CMake build output inside the Expo native projects
+tty-expo/android/**/build/
+tty-expo/modules/**/build/

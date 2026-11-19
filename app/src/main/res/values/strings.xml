@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">T3rm!n@l</string>
+    <string name="tile_label">T3rm!n@l</string>
+    <string name="shortcut_terminal_short">Terminal</string>
+    <string name="shortcut_terminal_long">Open T3rm!n@l terminal</string>
+</resources>
